@@ -180,6 +180,26 @@ if page == "오늘 한눈에":
     for item in expiring:
         st.info(f"{item['name']} ({item['location']}) — {expiry_status(item)} · {item['expiry_date']}")
 
+    st.subheader("현재 냉장고·냉동고 재고")
+    if not inventory:
+        st.caption("아직 재고가 등록되지 않았어요.")
+    else:
+        for location in LOCATIONS:
+            location_items = [item for item in inventory if item["location"] == location]
+            with st.expander(f"{location} 재료 ({len(location_items)}종)", expanded=True):
+                if not location_items:
+                    st.caption("등록된 재료가 없어요.")
+                for item in location_items:
+                    quantity_text = f"{fmt_qty(item['quantity'])} {item['unit']}"
+                    target = item.get("target_qty")
+                    if overstock(item):
+                        status = f"초과 · 기준 {fmt_qty(target)} {item['unit']}"
+                    elif target is not None:
+                        status = f"적정 범위 · 기준 {fmt_qty(target)} {item['unit']}"
+                    else:
+                        status = "적정 수량 미설정"
+                    st.write(f"• **{item['name']}** — {quantity_text} · {status}")
+
     upcoming = [p for p in fetch("meal_plans", order="meal_date") if p["meal_date"] >= today][:5]
     st.subheader("다가오는 가족 식사")
     if upcoming:
